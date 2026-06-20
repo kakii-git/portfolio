@@ -1,0 +1,24 @@
+name: Daily rebuild
+
+# 記事フィード（Qiita）はビルド時に取得するため、定期的に再ビルドして最新化する。
+# Cloudflare Pages の Deploy Hook URL を GitHub の Secrets に CF_DEPLOY_HOOK_URL として登録すること。
+# （リポジトリ Settings → Secrets and variables → Actions → New repository secret）
+
+on:
+  schedule:
+    # 毎日 21:00 UTC = 06:00 JST に1回。cron は UTC 固定なので注意。
+    - cron: "0 21 * * *"
+  workflow_dispatch: {} # 手動実行も可能
+
+jobs:
+  trigger-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Cloudflare Pages deploy hook
+        run: |
+          if [ -z "${{ secrets.CF_DEPLOY_HOOK_URL }}" ]; then
+            echo "::error::CF_DEPLOY_HOOK_URL secret is not set."
+            exit 1
+          fi
+          curl -fsS -X POST "${{ secrets.CF_DEPLOY_HOOK_URL }}"
+          echo "Deploy hook triggered."

@@ -1,0 +1,35 @@
+---
+import Base from "../layouts/Base.astro";
+import Header from "../components/Header.astro";
+import PageIndex from "../components/PageIndex.astro";
+import Hero from "../components/Hero.astro";
+import About from "../components/About.astro";
+import TechStack from "../components/TechStack.astro";
+import Timeline from "../components/Timeline.astro";
+import Contact from "../components/Contact.astro";
+import Footer from "../components/Footer.astro";
+import type { NavItem } from "../types";
+
+// Home ページのセクション（単一ソース）
+const sections: NavItem[] = [
+  { id: "hero", num: "00", label: "Top" },
+  { id: "about", num: "01", label: "自己紹介" },
+  { id: "techstack", num: "02", label: "技術スタック" },
+  { id: "timeline", num: "03", label: "これまでの活動" },
+  { id: "contact", num: "04", label: "連絡先" },
+];
+const numOf = (id: string) => sections.find((s) => s.id === id)!.num;
+---
+
+<Base>
+  <Header nav={sections} />
+  <main class="container">
+    <PageIndex nav={sections} />
+    <Hero num={numOf("hero")} />
+    <About num={numOf("about")} />
+    <TechStack num={numOf("techstack")} />
+    <Timeline num={numOf("timeline")} />
+    <Contact num={numOf("contact")} />
+  </main>
+  <Footer />
+</Base>

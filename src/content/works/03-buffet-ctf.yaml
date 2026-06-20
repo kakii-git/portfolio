@@ -1,0 +1,7 @@
+no: 3
+title: buffet-seminar2026-ctf
+year: 2026
+tech: [CTFd, Docker, nginx, Proxmox]
+description:
+  ja: サークルの講習向けに構築した初心者向けCTF環境。スコアサーバ（CTFd）と問題サーバ、全7カテゴリの作問・インフラを一人で整備。部内限定公開のためソースは非公開。
+image: ./buffet-ctf.png

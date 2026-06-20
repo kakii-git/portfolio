@@ -1,0 +1,46 @@
+---
+import { Image } from "astro:assets";
+import icon from "../assets/icon.jpg";
+import { PROFILE, SOCIAL_LINKS } from "../consts";
+import ExtLink from "./ExtLink.astro";
+
+const anyTentative = SOCIAL_LINKS.some((l) => l.tentative);
+
+interface Props { num: string; }
+const { num } = Astro.props;
+---
+
+<section class="section hero fade" id="hero">
+  <div class="sec-num">{num}</div>
+  <div class="hero-inner">
+    <div class="hero-text">
+      <h1 class="hero-name">ka<span class="dot">.</span>kii</h1>
+
+      <p class="hero-role">
+        {PROFILE.role.ja}
+        <span class="hero-role-en">{PROFILE.role.en}</span>
+      </p>
+
+      <p class="hero-lead">
+        {PROFILE.lead.ja}{PROFILE.lead.tentative && <span class="kari">（仮）</span>}
+        <span class="hero-lead-en">{PROFILE.lead.en}</span>
+      </p>
+
+      <div class="hero-links">
+        {SOCIAL_LINKS.map((l) => <ExtLink label={l.label} href={l.href} />)}
+      </div>
+
+      {anyTentative && <p class="kari-note">※ リンク先はすべて仮（未設定）</p>}
+    </div>
+
+    <Image
+      class="hero-portrait"
+      src={icon}
+      alt="ka.kii のアイコン"
+      width={196}
+      height={196}
+      densities={[1, 2]}
+      loading="eager"
+    />
+  </div>
+</section>

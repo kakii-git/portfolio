@@ -1,0 +1,6 @@
+# Nothing hidden here. Try: view-source:  (or: curl -sI)
+# recon enjoyers — there are flags in the HTML head and the response headers. happy hunting.
+User-agent: *
+Allow: /
+
+Sitemap: https://kakii-portfolio.pages.dev/sitemap-index.xml

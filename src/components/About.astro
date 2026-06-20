@@ -1,0 +1,80 @@
+---
+import { getCollection } from "astro:content";
+import { PROFILE } from "../consts";
+
+// 資格はコレクションから取得し、取得日の新しい順に並べる
+const certs = (await getCollection("certifications")).sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
+
+interface Props { num: string; }
+const { num } = Astro.props;
+---
+
+<section class="section fade" id="about">
+  <div class="sec-num">{num}</div>
+  <div>
+    <header class="sec-head">
+      <h2 class="sec-title">
+        自己紹介
+        <span class="sec-title-en">About me</span>
+      </h2>
+    </header>
+
+    <div class="caption-grid">
+      <div class="caption">
+        <div class="cap-rule"></div>
+        <h3 class="cap-label">
+          所属
+          <span class="cap-label-en">Affiliation</span>
+        </h3>
+        <p class="cap-value">
+          <strong>{PROFILE.affiliation.ja}<br />{PROFILE.affiliation.ja2}</strong>
+          {PROFILE.affiliation.tentative && <span class="kari">（仮）</span>}<br />
+          {PROFILE.affiliation.sub}
+          {PROFILE.affiliation.tentative && <span class="kari">（仮）</span>}
+        </p>
+      </div>
+
+      <div class="caption">
+        <div class="cap-rule"></div>
+        <h3 class="cap-label">
+          興味分野
+          <span class="cap-label-en">Interests</span>
+        </h3>
+        <p class="cap-value">
+          {PROFILE.interests.ja}<br />
+          {PROFILE.interests.sub}
+          {PROFILE.interests.tentative && <span class="kari">（仮）</span>}
+        </p>
+      </div>
+
+      <div class="caption caption--wide">
+        <div class="cap-rule"></div>
+        <h3 class="cap-label">
+          資格
+          <span class="cap-label-en">Certifications</span>
+        </h3>
+        <ul class="cert-list">
+          {
+            certs.map((c) => (
+              <li>
+                <span>{c.data.name}</span>
+                <span class="cert-year">{c.data.date.getFullYear()}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+
+    {
+      PROFILE.note && (
+        <p class="about-note">
+          {PROFILE.note.ja}
+          {PROFILE.note.tentative && <span class="kari">（仮）</span>}
+        </p>
+      )
+    }
+  </div>
+</section>

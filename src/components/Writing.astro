@@ -1,0 +1,49 @@
+---
+import { getWriting } from "../lib/writing";
+
+interface Props {
+  num: string;
+}
+const { num } = Astro.props;
+
+const articles = await getWriting();
+const ym = (d: Date) => `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}`;
+---
+
+<section class="section fade" id="writing">
+  <div class="sec-num">{num}</div>
+  <div>
+    <header class="sec-head">
+      <h2 class="sec-title">
+        記事
+        <span class="sec-title-en">Writing</span>
+      </h2>
+    </header>
+
+    {
+      articles.length === 0 ? (
+        <p class="contact-note">
+          記事はまだありません。Qiita に投稿するとビルド時に自動で反映されます。
+        </p>
+      ) : (
+        <div class="writing-grid">
+          {articles.map((a) => (
+            <article class="writing-card">
+              <div class="writing-thumb">
+                {a.image && <img src={a.image} loading="lazy" alt="" />}
+              </div>
+              <div class="writing-meta">
+                <span class="writing-date">{ym(a.date)}</span>
+                <span class="badge">{a.source}</span>
+              </div>
+              <a class="writing-title" href={a.url} target="_blank" rel="noopener">
+                {a.title}
+                <span class="arrow">↗</span>
+              </a>
+            </article>
+          ))}
+        </div>
+      )
+    }
+  </div>
+</section>

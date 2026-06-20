@@ -1,0 +1,76 @@
+---
+import { getCollection } from "astro:content";
+
+// タイムライン取得 → 日付の新しい順
+const entries = (await getCollection("timeline")).sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
+
+// 年ごとにグルーピング（年は降順、年内も降順）
+const byYear = new Map<number, typeof entries>();
+for (const e of entries) {
+  const y = e.data.date.getFullYear();
+  if (!byYear.has(y)) byYear.set(y, []);
+  byYear.get(y)!.push(e);
+}
+const years = [...byYear.keys()].sort((a, b) => b - a);
+
+// 表示用に YYYY.MM へ整形
+const ym = (d: Date) => `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}`;
+
+interface Props { num: string; }
+const { num } = Astro.props;
+---
+
+<section class="section fade" id="timeline">
+  <div class="sec-num">{num}</div>
+  <div>
+    <header class="sec-head">
+      <h2 class="sec-title">
+        これまでの活動
+        <span class="sec-title-en">Timeline</span>
+      </h2>
+    </header>
+
+    {
+      years.map((year) => {
+        const items = byYear.get(year)!;
+        return (
+          <details class="year-group" open>
+            <summary>
+              <span class="year-num">{year}</span>
+              <span class="year-count">{items.length} entries</span>
+              <span class="year-toggle">
+                <span class="toggle-open">＋</span>
+                <span class="toggle-close">−</span>
+              </span>
+            </summary>
+            <div class="timeline-entries">
+              {items.map((e) => (
+                <div class="tl-entry">
+                  <span class="tl-date">{e.data.dateLabel ?? ym(e.data.date)}</span>
+                  <p class="tl-body">
+                    {e.data.title.ja}
+                    {e.data.description?.ja && (
+                      <span class="tl-sub">
+                        {e.data.description.ja}
+                        {e.data.link && (
+                          <>
+                            {" — "}
+                            <a href={e.data.link}>
+                              {e.data.linkLabel ?? "link"} ↗
+                            </a>
+                          </>
+                        )}
+                      </span>
+                    )}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </details>
+        );
+      })
+    }
+  </div>
+</section>

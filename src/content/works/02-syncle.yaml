@@ -1,0 +1,9 @@
+no: 2
+title: Syncle
+year: 2026
+tech: [TypeScript, React, Node.js]
+description:
+  ja: ハッカソンで制作したスケジュール調整・通知のWebアプリ。バックエンドを担当。
+links:
+  - { label: GitHub, href: "https://github.com/kakii-git/Syncle" }
+image: ./syncle.png

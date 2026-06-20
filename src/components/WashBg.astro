@@ -1,0 +1,51 @@
+---
+/**
+ * 背景の wash（絵の具）SVG。preserveAspectRatio を変えて複数バリアントを出すため部品化。
+ * uid でフィルタIDを一意にし、同一ページに複数置いてもID衝突しないようにする。
+ */
+interface Props {
+  par: string; // preserveAspectRatio
+  uid: string; // フィルタID用サフィックス
+  class?: string;
+}
+const { par, uid, class: className } = Astro.props;
+const splash = `f-splash-${uid}`;
+const drip = `f-drip-${uid}`;
+---
+
+<svg
+  class:list={["bg-wash", className]}
+  aria-hidden="true"
+  focusable="false"
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 1600 1000"
+  preserveAspectRatio={par}
+>
+  <defs>
+    <filter id={splash} x="-40%" y="-40%" width="180%" height="180%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.011" numOctaves="3" seed="7" result="n"></feTurbulence>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="150"></feDisplacementMap>
+    </filter>
+    <filter id={drip} x="-60%" y="-60%" width="220%" height="220%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.06" numOctaves="2" seed="3" result="n2"></feTurbulence>
+      <feDisplacementMap in="SourceGraphic" in2="n2" scale="14"></feDisplacementMap>
+    </filter>
+  </defs>
+  <g filter={`url(#${splash})`}>
+    <ellipse cx="1450" cy="40" rx="250" ry="160" fill="#E2A491" fill-opacity="0.22"></ellipse>
+    <ellipse cx="20" cy="380" rx="190" ry="240" fill="#DDBC72" fill-opacity="0.18"></ellipse>
+    <ellipse cx="280" cy="1030" rx="290" ry="170" fill="#E2A491" fill-opacity="0.16"></ellipse>
+    <ellipse cx="1330" cy="660" rx="140" ry="105" fill="#DDBC72" fill-opacity="0.13"></ellipse>
+  </g>
+  <g filter={`url(#${drip})`}>
+    <circle cx="1175" cy="185" r="13" fill="#E2A491" fill-opacity="0.34"></circle>
+    <circle cx="1248" cy="118" r="7" fill="#E2A491" fill-opacity="0.30"></circle>
+    <circle cx="1120" cy="250" r="4.5" fill="#E2A491" fill-opacity="0.26"></circle>
+    <circle cx="235" cy="565" r="11" fill="#DDBC72" fill-opacity="0.32"></circle>
+    <circle cx="172" cy="628" r="6" fill="#DDBC72" fill-opacity="0.28"></circle>
+    <circle cx="300" cy="520" r="4" fill="#DDBC72" fill-opacity="0.24"></circle>
+    <circle cx="470" cy="880" r="9" fill="#E2A491" fill-opacity="0.26"></circle>
+    <circle cx="545" cy="935" r="5" fill="#E2A491" fill-opacity="0.22"></circle>
+    <circle cx="1370" cy="500" r="6" fill="#DDBC72" fill-opacity="0.24"></circle>
+  </g>
+</svg>

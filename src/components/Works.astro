@@ -1,0 +1,57 @@
+---
+import { getCollection } from "astro:content";
+import { Image } from "astro:assets";
+import ExtLink from "./ExtLink.astro";
+
+interface Props {
+  num: string;
+}
+const { num } = Astro.props;
+
+// 通し番号（no）の昇順で表示
+const works = (await getCollection("works")).sort((a, b) => a.data.no - b.data.no);
+---
+
+<section class="section fade" id="works">
+  <div class="sec-num">{num}</div>
+  <div>
+    <header class="sec-head">
+      <h2 class="sec-title">
+        制作物
+        <span class="sec-title-en">Works</span>
+      </h2>
+    </header>
+
+    {
+      works.map((w) => (
+        <article class="work">
+          <div class="work-no">No. {String(w.data.no).padStart(2, "0")}</div>
+          <div>
+            <div class="work-head">
+              <h3 class="work-title">{w.data.title}</h3>
+              <span class="work-year">{w.data.year}</span>
+            </div>
+            <p class="work-tech">{w.data.tech.join(" · ")}</p>
+            <p class="work-desc">{w.data.description.ja}</p>
+            {w.data.links && (
+              <div class="work-links">
+                {w.data.links.map((l) => (
+                  <ExtLink label={l.label} href={l.href} />
+                ))}
+              </div>
+            )}
+          </div>
+          {
+            w.data.image ? (
+              <Image src={w.data.image} alt={w.data.title} class="work-media" width={800} />
+            ) : (
+              <div class="work-media work-media--placeholder">
+                <span>スクリーンショット</span>
+              </div>
+            )
+          }
+        </article>
+      ))
+    }
+  </div>
+</section>

@@ -1,0 +1,12 @@
+---
+interface Props {
+  label: string;
+  href: string;
+  rel?: string;
+}
+const { label, href, rel = "noopener" } = Astro.props;
+const external = href.startsWith("http");
+---
+<a class="ext-link" href={href} rel={rel} {...external ? { target: "_blank" } : {}}>
+  {label} <span class="arrow">↗</span>
+</a>

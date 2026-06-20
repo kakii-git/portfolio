@@ -1,0 +1,26 @@
+---
+import Base from "../layouts/Base.astro";
+import Header from "../components/Header.astro";
+import PageIndex from "../components/PageIndex.astro";
+import Works from "../components/Works.astro";
+import Writing from "../components/Writing.astro";
+import Footer from "../components/Footer.astro";
+import type { NavItem } from "../types";
+
+// Works ページのセクション（番号は 00 から振り直し）
+const sections: NavItem[] = [
+  { id: "works", num: "00", label: "制作物" },
+  { id: "writing", num: "01", label: "記事" },
+];
+const numOf = (id: string) => sections.find((s) => s.id === id)!.num;
+---
+
+<Base title="Works — ka.kii" description="ka.kii の制作物と記事の一覧。">
+  <Header nav={sections} />
+  <main class="container">
+    <PageIndex nav={sections} />
+    <Works num={numOf("works")} />
+    <Writing num={numOf("writing")} />
+  </main>
+  <Footer />
+</Base>

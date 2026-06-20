@@ -1,0 +1,9 @@
+no: 1
+title: ka.kii's website（このサイト）
+year: 2026
+tech: [Astro, TypeScript, Cloudflare Pages]
+description:
+  ja: 現代アートのような余白を取り込んだ個人ポートフォリオ。Astro 製で軽量。ソースを覗くと、何か見つかるかもしれません。
+# links: 公開リポジトリ URL を用意したら追記
+#   - { label: GitHub, href: "https://github.com/kakii-git/..." }
+image: ./portfolio.png

@@ -1,0 +1,12 @@
+---
+import type { NavItem } from "../types";
+interface Props { nav: NavItem[]; }
+const { nav } = Astro.props;
+---
+<nav class="page-index" aria-label="ページ内目次">
+  {nav.map((item) => (
+    <a href={`#${item.id}`}>
+      <span class="pi-num">{item.num}</span><span class="pi-label">{item.label}</span>
+    </a>
+  ))}
+</nav>

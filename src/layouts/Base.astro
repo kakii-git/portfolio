@@ -1,0 +1,145 @@
+---
+import "../styles/global.css";
+import { SITE, FLAG } from "../consts";
+import WashBg from "../components/WashBg.astro";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = SITE.title, description = SITE.description } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ogImage = new URL(SITE.ogImage, Astro.site).href;
+---
+
+<!doctype html>
+<html lang={SITE.lang}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    {/* ── イースターエッグ: view-source した人へのフラグ ── */}
+    <Fragment set:html={`<!-- Welcome, fellow recon enjoyer. ${FLAG} -->`} />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="author" content={SITE.author} />
+    <link rel="canonical" href={canonical} />
+
+    {/* Favicon（クラインブルーのドット） */}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    {/* OGP / Twitter */}
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content="ja_JP" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    {/* Fonts */}
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="sitemap" href="/sitemap-index.xml" />
+  </head>
+  <body>
+    {/* 背景: 白い地に絵の具をこぼした表現（インラインSVG・ベクター）。
+        画面比率で2バリアントを CSS で出し分け（src/components/WashBg.astro）:
+        ・広い画面 (≥16:10) … slice = 全面表示（従来のデスクトップの見た目）
+        ・それ以外（スマホ/タブレット縦など） … meet = 歪ませず構図ごと縮小して中央に収める */}
+    <WashBg par="xMidYMid meet" uid="n" class="bg-wash--narrow" />
+    <WashBg par="xMidYMid slice" uid="w" class="bg-wash--wide" />
+
+    <slot />
+
+    {/*
+      進行的拡張のみの軽量スクリプト（フェードイン・スクロールスパイ・ハンバーガー）。
+      <html> に js クラスを付けてから動作。JSオフでも全要素は表示されたまま崩れない。
+    */}
+    <script>
+      document.documentElement.classList.add("js");
+
+      const ready = () => {
+        // ── スクロール・フェードイン ──
+        const fades = document.querySelectorAll<HTMLElement>(".fade");
+        if (!("IntersectionObserver" in window)) {
+          fades.forEach((el) => el.classList.add("in"));
+        } else {
+          const io = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                  entry.target.classList.add("in");
+                  io.unobserve(entry.target);
+                }
+              });
+            },
+            { threshold: 0.08 }
+          );
+          fades.forEach((el) => io.observe(el));
+        }
+
+        // ── サイドナビのスクロールスパイ ──
+        const links = document.querySelectorAll<HTMLAnchorElement>(".page-index a");
+        if (links.length && "IntersectionObserver" in window) {
+          const setActive = (id: string) => {
+            links.forEach((a) =>
+              a.classList.toggle("active", a.getAttribute("href") === "#" + id)
+            );
+          };
+          const spy = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) setActive(entry.target.id);
+              });
+            },
+            { rootMargin: "-35% 0px -55% 0px" }
+          );
+          links.forEach((a) => {
+            const sec = document.getElementById(a.getAttribute("href")!.slice(1));
+            if (sec) spy.observe(sec);
+          });
+        }
+
+        // ── ハンバーガーメニュー（≤1339px） ──
+        const btn = document.querySelector<HTMLButtonElement>(".menu-btn");
+        const panel = document.querySelector<HTMLElement>(".menu-panel");
+        if (btn && panel) {
+          const close = () => {
+            btn.setAttribute("aria-expanded", "false");
+            panel.hidden = true;
+          };
+          btn.addEventListener("click", () => {
+            const open = btn.getAttribute("aria-expanded") === "true";
+            btn.setAttribute("aria-expanded", String(!open));
+            panel.hidden = open;
+          });
+          panel.querySelectorAll("a").forEach((a) => a.addEventListener("click", close));
+          document.addEventListener("click", (e) => {
+            if (!panel.hidden && !panel.contains(e.target as Node) && !btn.contains(e.target as Node))
+              close();
+          });
+          document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") close();
+          });
+        }
+      };
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", ready);
+      } else {
+        ready();
+      }
+    </script>
+  </body>
+</html>

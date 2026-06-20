@@ -1,0 +1,47 @@
+---
+import { Icon } from "astro-icon/components";
+import { TECH_STACK } from "../data/techStack";
+
+interface Props {
+  num: string;
+}
+const { num } = Astro.props;
+---
+
+<section class="section fade" id="techstack">
+  <div class="sec-num">{num}</div>
+  <div>
+    <header class="sec-head">
+      <h2 class="sec-title">
+        技術スタック
+        <span class="sec-title-en">Tech Stack</span>
+      </h2>
+    </header>
+
+    <div class="tech-groups">
+      {
+        TECH_STACK.map((group) => (
+          <div class="tech-group">
+            <div class="cap-rule"></div>
+            <h3 class="cap-label">
+              {group.label}
+              <span class="cap-label-en">{group.labelEn}</span>
+            </h3>
+            <ul class="tech-list">
+              {group.items.map((item) => (
+                <li class="tech-item">
+                  {item.icon ? (
+                    <Icon name={`simple-icons:${item.icon}`} class="tech-icon" />
+                  ) : (
+                    <span class="tech-icon tech-icon--none" aria-hidden="true" />
+                  )}
+                  <span class="tech-name">{item.name}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
