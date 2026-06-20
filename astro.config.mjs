@@ -4,8 +4,8 @@ import sitemap from "@astrojs/sitemap";
 import icon from "astro-icon";
 import fs from "node:fs";
 
-// 本番ドメインは未確定（*.pages.dev 運用）。取得後にここと package.json を更新する。
-const SITE = "https://kakii-portfolio.pages.dev";
+// 本番ドメイン。canonical / OGP / sitemap / robots はすべてここから導出される。
+const SITE = "https://kakii.dev";
 
 // curl 用フラグは consts.ts に集約。ここではソースから値だけ読み出して _headers に展開する
 // （.ts を import せず読み取ることで型解決の依存を避ける）。
