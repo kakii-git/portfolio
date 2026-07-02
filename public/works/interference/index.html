@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>干渉 — every machine sings</title>
+<!-- kakii{every_machine_sings} -->
+<meta name="description" content="WebGLシェーダーによる単体完結のインタラクティブメディアアート。タッチ操作で色の縄張りが干渉し合う。">
+<meta name="author" content="ka.kii">
+<link rel="canonical" href="https://kakii.dev/works/interference/">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta property="og:type" content="article">
+<meta property="og:title" content="干渉 — every machine sings">
+<meta property="og:description" content="WebGLシェーダーによる単体完結のインタラクティブメディアアート。タッチ操作で色の縄張りが干渉し合う。">
+<meta property="og:url" content="https://kakii.dev/works/interference/">
+<meta property="og:image" content="https://kakii.dev/works/interference/og.jpg">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="干渉 — every machine sings">
+<meta name="twitter:description" content="WebGLシェーダーによる単体完結のインタラクティブメディアアート。タッチ操作で色の縄張りが干渉し合う。">
+<meta name="twitter:image" content="https://kakii.dev/works/interference/og.jpg">
+<style>
+  :root{
+    --mono:"SF Mono","Cascadia Code","JetBrains Mono","Roboto Mono","Courier New",monospace;
+    --serif:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP","Times New Roman",serif;
+  }
+  html,body{margin:0;height:100%;background:#04050c;overflow:hidden;}
+  canvas{display:block;position:fixed;inset:0;touch-action:none;cursor:crosshair;}
+
+  .hud{
+    position:fixed;top:20px;right:22px;text-align:right;
+    font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+    color:rgba(165,185,255,.55);user-select:none;pointer-events:none;line-height:1.9;
+  }
+  .hud b{font-weight:400;color:rgba(228,235,255,.85);}
+  .hud .dim{color:rgba(165,185,255,.28);}
+  #h-probe{transition:color .4s ease;}
+
+  .title{position:fixed;left:24px;bottom:22px;user-select:none;pointer-events:none;}
+  .title h1{margin:0;font-family:var(--serif);font-weight:400;font-size:22px;
+    letter-spacing:.5em;color:rgba(228,233,255,.80);}
+  .title p{margin:6px 0 0 2px;font-family:var(--mono);font-size:9.5px;
+    letter-spacing:.22em;color:rgba(165,185,255,.40);}
+
+  .hint{
+    position:fixed;left:50%;bottom:12vh;transform:translateX(-50%);
+    font-family:var(--mono);font-size:11px;letter-spacing:.3em;
+    color:rgba(198,210,255,.52);user-select:none;pointer-events:none;
+    transition:opacity 2.5s ease;white-space:nowrap;
+  }
+  .hint.gone{opacity:0;}
+
+  .pause{
+    position:fixed;top:20px;left:22px;font-family:var(--mono);font-size:10px;
+    letter-spacing:.2em;color:rgba(165,185,255,.32);background:none;border:none;
+    cursor:pointer;padding:4px 6px;
+  }
+  .pause:hover,.pause:focus-visible{color:rgba(228,235,255,.78);outline:1px solid rgba(165,185,255,.3);}
+
+  /* --- ink selector -------------------------------------------- */
+  .inks{
+    position:fixed;right:22px;bottom:22px;display:flex;gap:10px;
+  }
+  .ink{
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;
+    padding:7px 10px 6px;cursor:pointer;user-select:none;
+    background:rgba(8,10,22,.55);color:rgba(200,210,255,.55);
+    border:1px solid rgba(160,180,255,.18);
+    display:flex;align-items:center;gap:7px;
+    transition:border-color .25s, color .25s, box-shadow .25s;
+  }
+  .ink .dot{width:7px;height:7px;border-radius:50%;background:var(--ink-c);}
+  .ink:hover{color:rgba(230,238,255,.85);}
+  .ink[aria-pressed="true"]{
+    border-color:var(--ink-c);color:rgba(235,240,255,.92);
+    box-shadow:0 0 14px -2px var(--ink-c);
+  }
+  .ink:focus-visible{outline:1px solid rgba(200,215,255,.6);}
+
+  .nogl{
+    position:fixed;inset:0;display:none;place-items:center;
+    font-family:var(--mono);font-size:12px;color:rgba(198,210,255,.6);letter-spacing:.2em;
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="hud">
+  <div class="dim">/dev/probe0</div>
+  <div>UPTIME <b id="h-up">00:00:00</b></div>
+  <div>Fs <b>2.40</b> GS/s</div>
+  <div>TRACES <b id="h-tr">0000</b></div>
+  <div>FAULTS <b id="h-fl">0000</b></div>
+  <div>PROBE <b id="h-probe">ACO·瑠璃</b></div>
+  <div>ENTROPY <b id="h-ent">0.000</b></div>
+</div>
+
+<button class="pause" id="pauseBtn" aria-label="pause">⏸ HALT</button>
+
+<div class="title">
+  <h1>干渉</h1>
+  <p>every machine sings — ACO / EM / PWR</p>
+</div>
+
+<div class="hint" id="hint">触れてください — 接触はグリッチとして注入されます</div>
+
+<div class="inks" role="group" aria-label="ink selector">
+  <button class="ink" data-ch="0" style="--ink-c:#587dff" aria-pressed="true">
+    <span class="dot"></span>ACO·瑠璃</button>
+  <button class="ink" data-ch="1" style="--ink-c:#ff4030" aria-pressed="false">
+    <span class="dot"></span>EM·緋</button>
+  <button class="ink" data-ch="2" style="--ink-c:#2fd07e" aria-pressed="false">
+    <span class="dot"></span>PWR·常磐</button>
+</div>
+
+<div class="nogl" id="nogl">WebGL を利用できませんでした</div>
+
+<script>
+(() => {
+"use strict";
+
+const MAX_SRC = 24;
+const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const TIME_SCALE = (reduced ? 0.35 : 1.0) * 0.8;
+const GLITCH_SCALE = reduced ? 0.3 : 1.0;
+
+const canvas = document.getElementById("c");
+const gl = canvas.getContext("webgl", { antialias:false, alpha:false })
+        || canvas.getContext("experimental-webgl");
+if (!gl){
+  document.getElementById("nogl").style.display = "grid";
+  return;
+}
+
+const VERT = `
+attribute vec2 aPos;
+void main(){ gl_Position = vec4(aPos, 0.0, 1.0); }
+`;
+
+const FRAG = `
+precision highp float;
+
+uniform vec2  uRes;
+uniform float uTime;
+uniform int   uN;
+uniform vec4  uSrc[${MAX_SRC}];   /* x, y, birth, gain                          */
+uniform float uCh [${MAX_SRC}];   /* 0=瑠璃/ACO  1=緋/EM  2=常磐/PWR             */
+uniform float uEntropy;
+uniform float uGlitch;
+uniform float uSeed;
+
+const vec3 RURI   = vec3(0.10, 0.30, 1.00);
+const vec3 HI     = vec3(1.00, 0.14, 0.06);
+const vec3 TOKIWA = vec3(0.05, 0.82, 0.36);
+
+float hash(vec2 q){
+  return fract(sin(dot(q, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
+void main(){
+  vec2 p = gl_FragCoord.xy / uRes.y;
+  float t = uTime;
+
+  /* fault injection: torn rows, crushed signal */
+  float tear = 0.0;
+  if (uGlitch > 0.004){
+    float row = floor(gl_FragCoord.y / (uRes.y * 0.016));
+    float r1 = hash(vec2(row, uSeed));
+    float r2 = hash(vec2(row, uSeed + 7.0));
+    if (r1 > 0.74){
+      tear = uGlitch;
+      p.x += (r2 - 0.5) * 0.11 * uGlitch;
+    }
+  }
+
+  p += 0.015 * vec2(sin(p.y*6.0 + t*0.21), cos(p.x*5.0 - t*0.17));
+
+  /* ambient swell */
+  vec2 d1 = vec2(cos(t*0.030),       sin(t*0.030));
+  vec2 d2 = vec2(cos(2.1 + t*0.041), sin(2.1 + t*0.041));
+  vec2 d3 = vec2(cos(4.4 - t*0.023), sin(4.4 - t*0.023));
+  float v = 0.0;
+  v += 0.70 * sin(dot(p, d1) * 12.0 - t * 0.90);
+  v += 0.55 * sin(dot(p, d2) * 19.4 + t * 0.63);
+  v += 0.45 * sin(dot(p, d3) * 27.7 - t * 1.17);
+
+  /* -------------------------------------------------------------
+     three probes, one shared field.
+     WAVES travel far (slow 1/d falloff — they must interfere),
+     but COLOUR is territorial: each source owns a gaussian pool
+     of its ink. pools overlap -> screen-wide gradients, and the
+     water between distant pools stays quietly 瑠璃.
+  ------------------------------------------------------------- */
+  float aSum = 0.0;                       /* wave loudness           */
+  float cB = 0.0, cR = 0.0, cG = 0.0;     /* colour ownership        */
+  for (int i = 0; i < ${MAX_SRC}; i++){
+    if (i >= uN) break;
+    vec4  s  = uSrc[i];
+    float ch = uCh[i];
+    vec3  w  = ch < 0.5 ? vec3(1.,0.,0.)
+             : ch < 1.5 ? vec3(0.,1.,0.) : vec3(0.,0.,1.);
+
+    float kr = dot(w, vec3(34.0, 66.0, 48.0));
+    float om = dot(w, vec3( 2.1,  4.3,  3.0));
+    float cs = dot(w, vec3(0.15, 0.30, 0.22));
+
+    float age   = t - s.z;
+    float d     = length(p - s.xy);
+    float front = cs * age;
+    float gate  = smoothstep(front, front - 0.16, d);
+    float amp   = s.w * gate / (1.0 + d * 1.7);
+
+    v += amp * sin(d * kr - age * om);
+    aSum += amp;
+
+    /* the ink pool: strong at home, gone two pools away */
+    float cw = s.w * gate * exp(-d * d * 2.4);
+    cB += cw * w.x;  cR += cw * w.y;  cG += cw * w.z;
+  }
+
+  v = mix(v, floor(v * 4.0 + 0.5) / 4.0, uGlitch * 0.85);
+
+  /* ink ownership: territorial gaussians over a faint 瑠璃 sea */
+  float base = 0.055;
+  float ctot = cB + cR + cG + base;
+  vec3 ink = ( RURI   * (cB + base)
+             + HI     *  cR
+             + TOKIWA *  cG ) / ctot;
+  float dom = clamp((cB + cR + cG) / ctot, 0.0, 1.0);
+
+  /* draw */
+  float band = 0.5 + 0.5 * sin(v * 2.4);
+  float line = pow(band, 22.0);
+  float halo = pow(band,  4.0);
+
+  vec3 col = vec3(0.012, 0.015, 0.040);
+  col += ink * (line * 0.58 + halo * 0.088);
+  col += ink * max(v, 0.0) * 0.030;
+
+  /* flooded lobes: drifting patches + probe territory */
+  float m1 = 0.5 + 0.5 * sin(dot(p, vec2( 0.71,-0.70)) * 3.7 + t * 0.070);
+  float m2 = 0.5 + 0.5 * sin(dot(p, vec2( 0.30, 0.95)) * 2.9 - t * 0.052);
+  float patch = smoothstep(0.55, 0.85, m1 * m2 * 1.6);
+  float lobe  = smoothstep(0.7, 1.9, v);
+  col += ink * lobe * (patch * 0.30 + dom * 0.26);
+
+  /* entropy stars */
+  float fine = pow(0.5 + 0.5 * sin(v * 5.0 + 1.7), 12.0);
+  col += vec3(0.80, 0.84, 1.0) * fine * uEntropy * 0.28;
+
+  /* glitched rows swap wires */
+  col = mix(col, col.gbr, tear * 0.85);
+
+  /* tone map, saturate, vignette, dither */
+  col = col / (1.0 + col);
+  float l = dot(col, vec3(0.299, 0.587, 0.114));
+  col = clamp(mix(vec3(l), col, 1.24), 0.0, 1.0);
+  vec2 q = gl_FragCoord.xy / uRes - 0.5;
+  col *= 1.0 - dot(q, q) * 0.95;
+  col += (hash(gl_FragCoord.xy) - 0.5) / 72.0;
+
+  gl_FragColor = vec4(col, 1.0);
+}
+`;
+
+function compile(type, src){
+  const sh = gl.createShader(type);
+  gl.shaderSource(sh, src);
+  gl.compileShader(sh);
+  if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS))
+    throw new Error(gl.getShaderInfoLog(sh));
+  return sh;
+}
+const prog = gl.createProgram();
+gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
+gl.linkProgram(prog);
+if (!gl.getProgramParameter(prog, gl.LINK_STATUS))
+  throw new Error(gl.getProgramInfoLog(prog));
+gl.useProgram(prog);
+
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+const aPos = gl.getAttribLocation(prog, "aPos");
+gl.enableVertexAttribArray(aPos);
+gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+const U = {};
+for (const n of ["uRes","uTime","uN","uSrc","uCh","uEntropy","uGlitch","uSeed"])
+  U[n] = gl.getUniformLocation(prog, n);
+
+/* ------------------------------------------------------------ */
+const S = {
+  t: 0, last: performance.now(), paused: false,
+  traces: 0, faults: 0, entropy: 0,
+  srcData: new Float32Array(MAX_SRC * 4),
+  chData:  new Float32Array(MAX_SRC),
+  nSrc: 0,
+  glitch: 0, seed: 1.0, lastSeedAt: 0,
+  nextAutoFault: 9 + Math.random() * 12,
+  selCh: 0,
+  lastTouchAt: 0, lastFaultAt: 0,          /* rate limits            */
+  qual: 1.0, emaDt: 0.016, lastQualAt: 0,  /* dynamic resolution     */
+};
+
+let DPR = 1;
+function resize(){
+  DPR = Math.min(window.devicePixelRatio || 1, 1.6) * S.qual;
+  canvas.width  = Math.floor(innerWidth  * DPR);
+  canvas.height = Math.floor(innerHeight * DPR);
+  canvas.style.width  = innerWidth  + "px";
+  canvas.style.height = innerHeight + "px";
+  gl.viewport(0, 0, canvas.width, canvas.height);
+}
+window.addEventListener("resize", resize);
+resize();
+
+/* ------------------------------------------------------------ */
+/*  ink selector                                                 */
+/* ------------------------------------------------------------ */
+const PROBE_NAMES  = ["ACO·瑠璃", "EM·緋", "PWR·常磐"];
+const PROBE_COLORS = ["#587dff", "#ff4030", "#2fd07e"];
+const hProbe  = document.getElementById("h-probe");
+const inkBtns = Array.prototype.slice.call(document.querySelectorAll(".ink"));
+
+function selectInk(ch){
+  S.selCh = ch;
+  hProbe.textContent = PROBE_NAMES[ch];
+  hProbe.style.color = PROBE_COLORS[ch];
+  for (const b of inkBtns)
+    b.setAttribute("aria-pressed", String(Number(b.dataset.ch) === ch));
+}
+for (const b of inkBtns)
+  b.addEventListener("click", () => selectInk(Number(b.dataset.ch)));
+window.addEventListener("keydown", e => {
+  if (e.key === "1") selectInk(0);
+  if (e.key === "2") selectInk(1);
+  if (e.key === "3") selectInk(2);
+});
+selectInk(0);
+
+function toUnits(x, y){
+  return [ x / innerHeight, 1 - y / innerHeight ];
+}
+
+const hFl = document.getElementById("h-fl");
+function injectFault(strength){
+  /* flash-safety: no more than ~3 glitches per second (WCAG 2.3.1) */
+  const nowMs = performance.now();
+  if (nowMs - S.lastFaultAt < 320) return;
+  S.lastFaultAt = nowMs;
+  S.glitch = Math.min(1, S.glitch + strength) * GLITCH_SCALE;
+  S.seed = Math.random() * 100;
+  S.faults++;
+  hFl.textContent = String(S.faults).padStart(4, "0");
+}
+
+function addSource(x, y){
+  const [px, py] = toUnits(x, y);
+  const ch = S.selCh;
+  S.traces++;
+  S.entropy = Math.min(0.85, S.entropy + 0.012);
+  document.getElementById("hint").classList.add("gone");
+  injectFault(0.55);
+
+  if (S.nSrc < MAX_SRC){
+    const i = S.nSrc;
+    S.srcData[i*4]   = px;
+    S.srcData[i*4+1] = py;
+    S.srcData[i*4+2] = S.t;
+    S.srcData[i*4+3] = 1.15;
+    S.chData[i] = ch;
+    S.nSrc++;
+    return i;
+  }
+  let best = -1, bd = 1e9;
+  for (let i = 0; i < MAX_SRC; i++){
+    if (S.chData[i] !== ch) continue;
+    const dx = S.srcData[i*4]-px, dy = S.srcData[i*4+1]-py;
+    const d = dx*dx + dy*dy;
+    if (d < bd){ bd = d; best = i; }
+  }
+  if (best < 0){
+    bd = 1e9;
+    for (let i = 0; i < MAX_SRC; i++){
+      const dx = S.srcData[i*4]-px, dy = S.srcData[i*4+1]-py;
+      const d = dx*dx + dy*dy;
+      if (d < bd){ bd = d; best = i; }
+    }
+  }
+  S.srcData[best*4+3] = Math.min(2.0, S.srcData[best*4+3] + 0.30);
+  S.srcData[best*4+2] = S.t;
+  return best;
+}
+
+const drags = new Map();
+canvas.addEventListener("pointerdown", e => {
+  if (S.paused) return;
+  const nowMs = performance.now();
+  if (nowMs - S.lastTouchAt < 150) return;   /* soft debounce */
+  S.lastTouchAt = nowMs;
+  canvas.setPointerCapture(e.pointerId);
+  drags.set(e.pointerId, addSource(e.clientX, e.clientY));
+});
+canvas.addEventListener("pointermove", e => {
+  const idx = drags.get(e.pointerId);
+  if (idx === undefined || S.paused) return;
+  const [px, py] = toUnits(e.clientX, e.clientY);
+  S.srcData[idx*4]   = px;
+  S.srcData[idx*4+1] = py;
+});
+function release(e){ drags.delete(e.pointerId); }
+canvas.addEventListener("pointerup", release);
+canvas.addEventListener("pointercancel", release);
+
+/* ------------------------------------------------------------ */
+const pauseBtn = document.getElementById("pauseBtn");
+function togglePause(){
+  S.paused = !S.paused;
+  pauseBtn.textContent = S.paused ? "▶ RESUME" : "⏸ HALT";
+}
+pauseBtn.addEventListener("click", togglePause);
+window.addEventListener("keydown", e => {
+  if (e.code === "Space"){ e.preventDefault(); togglePause(); }
+});
+
+/* ------------------------------------------------------------ */
+const hUp  = document.getElementById("h-up");
+const hTr  = document.getElementById("h-tr");
+const hEnt = document.getElementById("h-ent");
+const z = v => String(v).padStart(2, "0");
+
+function frame(now){
+  requestAnimationFrame(frame);
+  const rawDt = Math.min(0.05, (now - S.last) / 1000);
+  let dt = rawDt * TIME_SCALE;
+  S.last = now;
+  if (S.paused) dt = 0;
+  S.t += dt;
+
+  /* dynamic resolution: if the GPU struggles, quietly render
+     smaller; if it recovers, climb back up. */
+  if (!S.paused){
+    S.emaDt = S.emaDt * 0.95 + rawDt * 0.05;
+    if (now - S.lastQualAt > 2000){
+      if (S.emaDt > 0.024 && S.qual > 0.55){        /* < ~42fps */
+        S.qual = Math.max(0.55, S.qual - 0.15);
+        S.lastQualAt = now; resize();
+      } else if (S.emaDt < 0.014 && S.qual < 1.0){  /* > ~71fps */
+        S.qual = Math.min(1.0, S.qual + 0.10);
+        S.lastQualAt = now; resize();
+      }
+    }
+  }
+
+  S.glitch *= Math.pow(0.0006, dt * 2.4);
+  if (S.glitch < 0.004) S.glitch = 0;
+  if (S.glitch > 0 && now - S.lastSeedAt > 65){
+    S.seed = Math.random() * 100;
+    S.lastSeedAt = now;
+  }
+
+  S.nextAutoFault -= dt;
+  if (S.nextAutoFault <= 0){
+    injectFault(0.22 + Math.random() * 0.18);
+    S.nextAutoFault = 10 + Math.random() * 16;
+  }
+
+  gl.uniform2f(U.uRes, canvas.width, canvas.height);
+  gl.uniform1f(U.uTime, S.t);
+  gl.uniform1i(U.uN, S.nSrc);
+  gl.uniform4fv(U.uSrc, S.srcData);
+  gl.uniform1fv(U.uCh, S.chData);
+  gl.uniform1f(U.uEntropy, S.entropy);
+  gl.uniform1f(U.uGlitch, S.glitch);
+  gl.uniform1f(U.uSeed, S.seed);
+
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+  const s = Math.floor(S.t)%60, m = Math.floor(S.t/60)%60, h = Math.floor(S.t/3600);
+  hUp.textContent  = `${z(h)}:${z(m)}:${z(s)}`;
+  hTr.textContent  = String(S.traces).padStart(4, "0");
+  hEnt.textContent = S.entropy.toFixed(3);
+}
+requestAnimationFrame(frame);
+
+console.log("%ckakii{every_machine_sings}",
+  "color:#587dff;font-family:monospace;letter-spacing:.15em;");
+})();
+</script>
+</body>
+</html>

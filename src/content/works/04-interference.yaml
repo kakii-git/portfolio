@@ -1,0 +1,8 @@
+no: 4
+title: 干渉 — every machine sings
+year: 2026
+tech: [WebGL, GLSL, メディアアート]
+description:
+  ja: WebGLシェーダーによる単体完結のインタラクティブメディアアート。タッチ操作で色の縄張りが干渉し合う。Fable 5 で遊んで作ってみました。
+links:
+  - { label: 作品を開く, href: "/works/interference/" }

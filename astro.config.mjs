@@ -33,7 +33,13 @@ function reconHeaders() {
 
 export default defineConfig({
   site: SITE,
-  integrations: [sitemap(), icon(), reconHeaders()],
+  // public/ 素通しの生HTML（/works/interference/）は Astro が把握できず sitemap に
+  // 載らないため、customPages で明示的に追加する。
+  integrations: [
+    sitemap({ customPages: [`${SITE}/works/interference/`] }),
+    icon(),
+    reconHeaders(),
+  ],
   // クライアントJSは原則ゼロ。fade-in / scrollspy / ハンバーガーのみ
   // Base.astro 内の <script> で進行的拡張として読み込む（JSオフでも崩れない）。
   image: {
