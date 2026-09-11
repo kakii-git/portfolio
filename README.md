@@ -2,8 +2,8 @@
 
 余白を生かした個人ポートフォリオサイト。Astro + TypeScript で構築し、Cloudflare Pages にデプロイ。
 
-- **2ページ構成**: Home（Hero / 自己紹介 / 技術スタック / これまでの活動 / 連絡先）、Works（制作物 / 記事）
-- **データ駆動・追記型**: YAML を1つ足して push すれば項目が増える
+- **3ページ構成**: Home（Hero / 自己紹介 / 技術スタック / これまでの活動 / 連絡先）、Works（制作物）、Blog（記事一覧 + 本文）
+- **データ駆動・追記型**: YAML（活動・資格・制作物）や Markdown（記事）を1つ足して push すれば項目が増える
 - **クライアントJSは最小**（フェードイン・スクロールスパイ・メニュー開閉のみ）
 
 ## 開発
@@ -14,6 +14,7 @@ npm run dev      # http://localhost:4321
 npm run build    # dist/ へ静的出力
 npm run preview  # ビルド結果を確認
 npm run check    # 型チェック（astro check）
+npm test         # 単体テスト（vitest）
 ```
 
 Node は `.nvmrc`（20）に固定。Astro 5 の要件は Node 18.20.8 / 20.3.0 / 22 以上。
@@ -28,13 +29,20 @@ src/
     timeline/*.yaml        活動 1件 = 1ファイル
     certifications/*.yaml  資格 1件 = 1ファイル
     works/*.yaml           制作物 1件 = 1ファイル（スクショ画像も同階層に）
+    blog/*.md              自サイト記事 1本 = 1ファイル（画像も同階層に）
   data/techStack.ts  技術スタック（ジャンル別）
-  lib/writing.ts     記事フィード取得（RSS/Atom ＋ OGP画像）
+  lib/
+    writing.ts         外部記事の取得（RSS/Atom ＋ OGP画像）
+    blog.ts            外部記事と自サイト記事を1本のリストに統合
+    mergeArticles.ts   日付降順マージ（純粋関数・単体テストあり）
+    date.ts            日付整形（UTC基準・単体テストあり）
   layouts/Base.astro <head>・メタ・背景・軽量スクリプト
   components/*.astro  各セクション
   pages/
     index.astro        Home
     works.astro        /works
+    blog/index.astro   /blog（統合一覧）
+    blog/[slug].astro  /blog/<slug>（記事本文）
     robots.txt.ts      robots.txt を site 設定から生成
   styles/global.css  デザイン仕様
 public/              favicon / og-image などの静的アセット
@@ -71,9 +79,38 @@ links:
   - { label: GitHub, href: "https://github.com/..." }
 ```
 
-### 記事フィードを変える
+### 記事を書く（自サイト記事）
 
-`src/consts.ts` の `FEEDS` を編集。各フィードをビルド時に取得し、日付降順で統合、サムネ（OGP画像）も自動取得する。取得に失敗してもビルドは落ちない（そのフィードを空としてスキップ）。
+`src/content/blog/` に `.md` を1つ置くだけ。`/blog/` の一覧と `/blog/<slug>/` の本文ページが生成され、Qiita の記事と日付降順で混ざる。
+
+```markdown
+---
+title: 記事のタイトル
+date: 2026-09-11          # 日付の唯一の情報源。ファイル名には日付を付けない
+description: 一覧には出ず、meta description と og:description に使う  # 任意
+image: ./cover.png        # 任意。サムネイルと OGP 画像を兼ねる
+---
+
+本文。見出しは `##` と `###` まで（`#` は記事タイトル用）。
+
+![図](./cover.png)
+```
+
+決まりごと:
+
+- **URL は拡張子を除いたファイル名から決まる**。大文字・空白は slugify されて変わってしまうので、**小文字ケバブケース**で命名する（`why-i-picked-astro.md` → `/blog/why-i-picked-astro/`）
+- **frontmatter に `slug` を書かない**。書くと URL がそれで上書きされる
+- **`index.md` は使わない**（`/blog/index/` という紛らわしい URL になる）
+- サブディレクトリに置いてもよい。その場合 URL も入れ子になる（`nested/deep-post.md` → `/blog/nested/deep-post/`）
+- **下書きの仕組みは無い**。`src/content/blog/` 配下の `.md` は、ファイル名に関わらず（`_` 始まりでも）すべて公開される。公開したくないものはこのディレクトリに置かない
+- 画像は `.md` と同じ階層に置けば、frontmatter からも本文の `![](./foo.png)` からも Astro が最適化する
+- コードブロックは Shiki の `github-light` テーマでハイライトされる（`astro.config.mjs`）
+- 記事が0件のときはビルドが `The collection "blog" does not exist or is empty.` と警告するが、ビルドは成功し `/blog/` は「記事はまだありません。」を表示する
+- **記事を削除・リネームしたらビルド前に `rm -rf .astro node_modules/.astro` する**。Content Layer のキャッシュ（実体は `node_modules/.astro`）に消したはずの記事が残り、それをビルドしようとして `LocalImageUsedWrongly` で失敗することがある
+
+### 記事フィードを変える（外部記事）
+
+`src/consts.ts` の `FEEDS` を編集。各フィードをビルド時に取得し、自サイト記事と合わせて日付降順で統合、サムネ（OGP画像）も自動取得する。取得に失敗してもビルドは落ちない（そのフィードを空としてスキップ）。一覧では `badge` の出典名（`Qiita` / `kakii.dev`）で見分けられ、外部記事だけが別タブで開く。
 
 ```ts
 export const FEEDS = [
@@ -99,4 +136,6 @@ canonical / OGP / sitemap / robots は `astro.config.mjs` の `site` から導�
 - Content Collections は glob ローダー（1ファイル = 1エントリ＝追記型）
 - 日付は実 `Date` 型で保持し、表示時に `YYYY.MM` へ整形
 - 背景はインラインSVG（feTurbulence）でベクター・追加リクエストなし。画面比率で表示方式を出し分け
-- 画像は Astro の `<Image>` で最適化（WebP）
+- 画像は Astro の `<Image>` で最適化（WebP）。記事の OGP だけは PNG で出す（WebP は X のカードで表示されない環境があるため）
+- 記事の統合ロジックは `astro:*` に依存しない純粋関数（`mergeArticles.ts` / `date.ts`）に切り出し、vitest で単体テストしている
+- 日付整形は UTC 基準。frontmatter の `2026-09-11` は UTC 0時として解釈されるため、ローカル getter を使うと UTC より西の環境で前日に化ける

@@ -66,4 +66,22 @@ const works = defineCollection({
     }),
 });
 
-export const collections = { timeline, certifications, works };
+const blog = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/blog" }),
+  // timeline / works は { ja, en } の i18n を使うが、blog は踏襲しない。
+  // あれは短いラベルだから両言語を併記できているのであって、本文が日本語のみの
+  // 記事はタイトルだけ英訳しても読めず意味がないため、title は素の string にする。
+  schema: ({ image }) =>
+    z.object({
+      title: z.string(),
+      // 日付の唯一の情報源。ファイル名には日付を付けない（URL に出てしまうため）。
+      date: z.coerce.date(),
+      // 本文ページの <meta name="description"> と og:description に使う。
+      // 未指定ならサイト共通の説明文にフォールバックする（本文からの自動抜粋はしない）。
+      description: z.string().optional(),
+      // サムネイル兼 OGP 画像。Markdown と同階層に置く（works と同じ流儀）。
+      image: image().optional(),
+    }),
+});
+
+export const collections = { timeline, certifications, works, blog };

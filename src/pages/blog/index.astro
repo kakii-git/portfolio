@@ -1,0 +1,61 @@
+---
+import Base from "../../layouts/Base.astro";
+import Header from "../../components/Header.astro";
+import Footer from "../../components/Footer.astro";
+import { getBlogArticles } from "../../lib/blog";
+import { formatYearMonth } from "../../lib/date";
+
+// 自サイト記事と外部記事を日付降順で1本にまとめた一覧。
+const articles = await getBlogArticles();
+---
+
+<Base
+  title="Blog — ka.kii"
+  description="ka.kii が書いた記事の一覧。自サイトの記事と Qiita の記事を日付順に並べる。"
+>
+  {/* 単一セクションのページなので目次（PageIndex / ハンバーガー）は出さない */}
+  <Header nav={[]} />
+  <main class="container">
+    <section class="section fade" id="blog">
+      <div class="sec-num">00</div>
+      <div>
+        <header class="sec-head">
+          <h2 class="sec-title">
+            ブログ
+            <span class="sec-title-en">Blog</span>
+          </h2>
+        </header>
+
+        {
+          articles.length === 0 ? (
+            <p class="contact-note">記事はまだありません。</p>
+          ) : (
+            <div class="writing-grid">
+              {articles.map((a) => (
+                <article class="writing-card">
+                  <div class="writing-thumb">
+                    {a.image && <img src={a.image} loading="lazy" alt="" />}
+                  </div>
+                  <div class="writing-meta">
+                    <span class="writing-date">{formatYearMonth(a.date)}</span>
+                    <span class="badge">{a.source}</span>
+                  </div>
+                  {/* 外部記事だけ別タブ＋↗。自サイト記事は同じタブで本文へ進む */}
+                  <a
+                    class="writing-title"
+                    href={a.url}
+                    {...(a.external ? { target: "_blank", rel: "noopener" } : {})}
+                  >
+                    {a.title}
+                    {a.external && <span class="arrow">↗</span>}
+                  </a>
+                </article>
+              ))}
+            </div>
+          )
+        }
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Base>

@@ -710,7 +710,8 @@ a { color: inherit; text-decoration: none; }
   margin-top: 18px;
 }
 
-/* ───────────────────────── Writing ───────────────────────── */
+/* ───────────────────────── 記事カード（/blog/ の一覧） ─────────────────────────
+   クラス名の writing-* は既存のまま据え置いている（リネームは別途）。 */
 
 .writing-grid {
   display: grid;
@@ -777,6 +778,140 @@ a { color: inherit; text-decoration: none; }
   font-size: 12px;
   margin-left: 6px;
 }
+
+/* ───────────────────────── Blog post ─────────────────────────
+   本文ページは .section スカフォールド（sec-num 列）を使わない。
+   番号列が本文の横幅を食うため。中央寄せもせず、既存ページと同じく
+   .container の左端に揃える。 */
+
+.post {
+  max-width: 720px;
+  padding: 88px 0 104px;
+}
+
+.post-head {
+  padding-bottom: 28px;
+  margin-bottom: 40px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.post-date {
+  display: block;
+  font-size: 12px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+}
+
+.post-title {
+  margin-top: 10px;
+  font-size: clamp(24px, 3.6vw, 36px);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+}
+
+.post-back {
+  display: inline-block;
+  margin-top: 64px;
+  font-size: 13px;
+  color: var(--ink-2);
+  border-bottom: 1px solid var(--hairline);
+  padding-bottom: 4px;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.post-back:hover { color: var(--blue); border-color: var(--blue); }
+
+/* ───────────────────────── Prose（記事本文） ─────────────────────────
+   Markdown が生の h2/p/ul/pre を吐くので、.prose 配下にスコープして当てる。
+   色は既存トークンのみ。新しい色は導入しない。 */
+
+.prose h2 {
+  margin-top: 56px;
+  margin-bottom: 16px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+}
+
+.prose h3 {
+  margin-top: 40px;
+  margin-bottom: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.prose h2:first-child, .prose h3:first-child { margin-top: 0; }
+
+.prose p { margin: 20px 0; color: var(--ink-2); }
+
+.prose ul, .prose ol { margin: 20px 0; padding-left: 1.4em; color: var(--ink-2); }
+.prose li { margin: 6px 0; }
+.prose li > ul, .prose li > ol { margin: 6px 0; }
+
+.prose strong { font-weight: 600; color: var(--ink); }
+
+.prose a {
+  border-bottom: 1px solid var(--hairline);
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.prose a:hover { color: var(--blue); border-color: var(--blue); }
+
+/* Shiki が <pre> にインラインで背景色・文字色を出すので、ここでは色を指定せず
+   余白・罫線・横スクロールだけを足す（上書きするとテーマの配色が壊れる）。 */
+.prose pre {
+  margin: 24px 0;
+  padding: 16px 18px;
+  border: 1px solid var(--hairline);
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.prose :not(pre) > code {
+  background: color-mix(in srgb, var(--hairline) 55%, transparent);
+  border-radius: 2px;
+  padding: 1px 5px;
+  font-size: 0.9em;
+}
+
+.prose blockquote {
+  margin: 24px 0;
+  padding-left: 20px;
+  border-left: 2px solid var(--hairline);
+  color: var(--ink-2);
+}
+
+.prose img { max-width: 100%; height: auto; }
+
+.prose hr {
+  margin: 48px 0;
+  border: none;
+  border-top: 1px solid var(--hairline);
+}
+
+/* テーブルは display:block で横スクロールさせる。tr/td は匿名テーブルボックスとして
+   描画されるので崩れない。remark プラグインでラッパー要素を足す方法は依存が増えるので採らない。 */
+.prose table {
+  display: block;
+  overflow-x: auto;
+  margin: 24px 0;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.prose th, .prose td {
+  border: 1px solid var(--hairline);
+  padding: 8px 14px;
+  text-align: left;
+}
+
+.prose th { font-weight: 600; }
+.prose td { color: var(--ink-2); }
 
 /* ───────────────────────── Footer ───────────────────────── */
 
@@ -901,6 +1036,8 @@ a { color: inherit; text-decoration: none; }
 
   .section { padding: 56px 0; }
 
+  .post { padding: 56px 0 72px; }
+
   .hero { padding: 64px 0 72px; }
 
   .hero-links { gap: 10px 20px; }
@@ -916,4 +1053,9 @@ a { color: inherit; text-decoration: none; }
   .tl-entry::after { left: 65.5px; }
 
   .menu-panel { left: 20px; right: 20px; }
+
+  /* ヘッダーのナビが Home / Works / Blog の3項目になり、28px の間隔のままだと
+     360px 幅の端末でブランド名が2行に折り返す。狭い画面だけ間隔を詰めて1行に収める。 */
+  .site-nav { gap: 16px; }
+  .header-right { gap: 14px; }
 }

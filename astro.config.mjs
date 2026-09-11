@@ -42,6 +42,12 @@ export default defineConfig({
   ],
   // クライアントJSは原則ゼロ。fade-in / scrollspy / ハンバーガーのみ
   // Base.astro 内の <script> で進行的拡張として読み込む（JSオフでも崩れない）。
+  // 記事本文のコードハイライト。サイトが白基調なので明るいテーマを指定する
+  // （既定の github-dark だと本文の中で黒い塊が浮く）。Shiki のバンドル済みテーマ
+  // なので追加依存は要らない。色は <pre> にインラインで出るため CSS では触らない。
+  markdown: {
+    shikiConfig: { theme: "github-light" },
+  },
   image: {
     // ローカル画像の最適化（sharp）。リモート画像は使わない。
     responsiveStyles: true,

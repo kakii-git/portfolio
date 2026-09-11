@@ -1,13 +1,6 @@
 import { XMLParser } from "fast-xml-parser";
 import { FEEDS } from "../consts";
-
-export interface Article {
-  title: string;
-  url: string;
-  date: Date;
-  source: string;
-  image?: string; // OGP og:image（ビルド時に各記事ページから取得）
-}
+import type { Article } from "../types";
 
 const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_" });
 
@@ -55,7 +48,13 @@ export async function getWriting(): Promise<Article[]> {
         const title = typeof e.title === "object" ? (e.title["#text"] ?? "") : (e.title ?? "");
         const when = e.published ?? e.updated;
         if (href && title && when) {
-          out.push({ title: String(title), url: String(href), date: new Date(when), source: feed.source });
+          out.push({
+            title: String(title),
+            url: String(href),
+            date: new Date(when),
+            source: feed.source,
+            external: true,
+          });
         }
       }
 
@@ -65,7 +64,13 @@ export async function getWriting(): Promise<Article[]> {
         const title = it.title ?? "";
         const when = it.pubDate ?? it.date;
         if (href && title && when) {
-          out.push({ title: String(title), url: String(href), date: new Date(when), source: feed.source });
+          out.push({
+            title: String(title),
+            url: String(href),
+            date: new Date(when),
+            source: feed.source,
+            external: true,
+          });
         }
       }
     } catch (err) {

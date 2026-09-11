@@ -23,7 +23,11 @@ export const SITE = {
   ogImage: "/og-image.png", // 静的1枚。自動生成は将来課題（README参照）。
 } as const;
 
-// ── 記事フィード（Writing セクション） ──
+// ── 自サイト記事の出典ラベル ──
+// /blog/ の一覧で外部記事の badge（Qiita 等）と並べて表示する。
+export const POST_SOURCE = "kakii.dev";
+
+// ── 外部記事のフィード（/blog/ の一覧に統合される） ──
 // ユーザー名の変更はここだけ。Zenn はアカウント作成後に1行足せば統合される。
 export const FEEDS = [
   { source: "Qiita", url: "https://qiita.com/ka-kii/feed" },
