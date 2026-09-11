@@ -24,8 +24,11 @@ export const TECH_STACK: TechGroup[] = [
     labelEn: "Languages",
     items: [
       { name: "C", icon: "c" },
+      { name: "C++", icon: "cplusplus" },
       { name: "Python", icon: "python" },
+      { name: "Verilog" },
       { name: "PHP", icon: "php" },
+      { name: "JavaScript", icon: "javascript" },
       { name: "HTML/CSS", icon: "html5" },
     ],
   },
@@ -49,6 +52,8 @@ export const TECH_STACK: TechGroup[] = [
       { name: "Linux", icon: "linux" },
       { name: "Proxmox", icon: "proxmox" },
       { name: "Cloudflare", icon: "cloudflare" },
+      // Vivado 自体のアイコンは Simple Icons に無いため、提供元の xilinx を流用する
+      { name: "Vivado", icon: "xilinx" },
     ],
   },
 ];
