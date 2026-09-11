@@ -1053,4 +1053,9 @@ a { color: inherit; text-decoration: none; }
   .tl-entry::after { left: 65.5px; }
 
   .menu-panel { left: 20px; right: 20px; }
+
+  /* ヘッダーのナビが Home / Works / Blog の3項目になり、28px の間隔のままだと
+     360px 幅の端末でブランド名が2行に折り返す。狭い画面だけ間隔を詰めて1行に収める。 */
+  .site-nav { gap: 16px; }
+  .header-right { gap: 14px; }
 }
