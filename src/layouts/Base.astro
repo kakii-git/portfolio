@@ -6,11 +6,21 @@ import WashBg from "../components/WashBg.astro";
 interface Props {
   title?: string;
   description?: string;
+  /** サイト相対パス or 絶対URL。未指定ならサイト共通の1枚。null は渡さないこと（既定値が効かない） */
+  ogImage?: string;
+  /** 記事本文ページだけ "article"。それ以外は既定の "website" */
+  ogType?: "website" | "article";
 }
 
-const { title = SITE.title, description = SITE.description } = Astro.props;
+const {
+  title = SITE.title,
+  description = SITE.description,
+  ogImage: ogImagePath = SITE.ogImage,
+  ogType = "website",
+} = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
-const ogImage = new URL(SITE.ogImage, Astro.site).href;
+// getImage() が返すのはサイト相対パスなので、絶対URL化はここ1箇所に集約する。
+const ogImage = new URL(ogImagePath, Astro.site).href;
 ---
 
 <!doctype html>
@@ -31,7 +41,7 @@ const ogImage = new URL(SITE.ogImage, Astro.site).href;
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
     {/* OGP / Twitter */}
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />

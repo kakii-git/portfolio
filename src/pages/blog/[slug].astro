@@ -1,0 +1,47 @@
+---
+import { getCollection, render } from "astro:content";
+import { getImage } from "astro:assets";
+import type { InferGetStaticPropsType } from "astro";
+import Base from "../../layouts/Base.astro";
+import Header from "../../components/Header.astro";
+import Footer from "../../components/Footer.astro";
+import { formatDate, toIsoDate } from "../../lib/date";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog");
+  // slug は glob ローダーが決める entry.id（拡張子を除いたファイル名の slugify）。
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+// OGP は format: "png" を明示する。既定の WebP は X のカードで表示されない環境がある。
+// 画像が無い記事は undefined を渡し、Base 側の既定値（SITE.ogImage）に落とす。
+const ogImage = post.data.image
+  ? (await getImage({ src: post.data.image, width: 1200, format: "png" })).src
+  : undefined;
+---
+
+<Base
+  title={`${post.data.title} — ka.kii`}
+  description={post.data.description}
+  ogImage={ogImage}
+  ogType="article"
+>
+  <Header nav={[]} />
+  <main class="container">
+    <article class="post fade">
+      <header class="post-head">
+        <time class="post-date" datetime={toIsoDate(post.data.date)}>
+          {formatDate(post.data.date)}
+        </time>
+        <h1 class="post-title">{post.data.title}</h1>
+      </header>
+      <div class="prose"><Content /></div>
+      <a class="post-back" href="/blog/">← ブログ一覧へ</a>
+    </article>
+  </main>
+  <Footer />
+</Base>
