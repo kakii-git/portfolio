@@ -3,11 +3,13 @@ import type { NavItem } from "../types";
 interface Props { nav: NavItem[]; }
 const { nav } = Astro.props;
 
-// 現在ページに応じて Home / Works のアクティブを判定（末尾スラッシュを正規化）
+// 現在ページに応じて Home / Works / Blog のアクティブを判定（末尾スラッシュを正規化）
 const path = Astro.url.pathname.replace(/\/+$/, "") || "/";
 const siteNav = [
   { label: "Home", href: "/", current: path === "/" },
   { label: "Works", href: "/works", current: path === "/works" },
+  // Blog は記事本文ページ（/blog/<slug>/）でもアクティブにする
+  { label: "Blog", href: "/blog", current: path === "/blog" || path.startsWith("/blog/") },
 ];
 ---
 <header class="site-header">
@@ -19,16 +21,21 @@ const siteNav = [
           <a href={item.href} {...item.current ? { "aria-current": "page" } : {}}>{item.label}</a>
         ))}
       </nav>
-      <button class="menu-btn" type="button" aria-label="目次を開く" aria-expanded="false">
-        <span></span><span></span>
-      </button>
+      {/* ページ内目次が無いページ（/blog/ 等）ではハンバーガーごと出さない */}
+      {nav.length > 0 && (
+        <button class="menu-btn" type="button" aria-label="目次を開く" aria-expanded="false">
+          <span></span><span></span>
+        </button>
+      )}
     </div>
   </div>
-  <div class="menu-panel" hidden>
-    {nav.map((item) => (
-      <a href={`#${item.id}`}>
-        <span class="pi-num">{item.num}</span><span class="pi-label">{item.label}</span>
-      </a>
-    ))}
-  </div>
+  {nav.length > 0 && (
+    <div class="menu-panel" hidden>
+      {nav.map((item) => (
+        <a href={`#${item.id}`}>
+          <span class="pi-num">{item.num}</span><span class="pi-label">{item.label}</span>
+        </a>
+      ))}
+    </div>
+  )}
 </header>

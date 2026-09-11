@@ -710,7 +710,8 @@ a { color: inherit; text-decoration: none; }
   margin-top: 18px;
 }
 
-/* ───────────────────────── Writing ───────────────────────── */
+/* ───────────────────────── 記事カード（/blog/ の一覧） ─────────────────────────
+   クラス名の writing-* は既存のまま据え置いている（リネームは別途）。 */
 
 .writing-grid {
   display: grid;
