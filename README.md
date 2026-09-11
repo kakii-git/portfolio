@@ -39,11 +39,11 @@ src/
   layouts/Base.astro <head>・メタ・背景・軽量スクリプト
   components/*.astro  各セクション
   pages/
-    index.astro        Home
-    works.astro        /works
-    blog/index.astro   /blog（統合一覧）
-    blog/[slug].astro  /blog/<slug>（記事本文）
-    robots.txt.ts      robots.txt を site 設定から生成
+    index.astro           Home
+    works.astro           /works
+    blog/index.astro      /blog（統合一覧）
+    blog/[...slug].astro  /blog/<slug>（記事本文）
+    robots.txt.ts         robots.txt を site 設定から生成
   styles/global.css  デザイン仕様
 public/              favicon / og-image などの静的アセット
 astro.config.mjs     site 設定・ビルド時のヘッダ生成
