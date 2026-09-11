@@ -106,7 +106,7 @@ image: ./cover.png        # 任意。サムネイルと OGP 画像を兼ねる
 - 画像は `.md` と同じ階層に置けば、frontmatter からも本文の `![](./foo.png)` からも Astro が最適化する
 - コードブロックは Shiki の `github-light` テーマでハイライトされる（`astro.config.mjs`）
 - 記事が0件のときはビルドが `The collection "blog" does not exist or is empty.` と警告するが、ビルドは成功し `/blog/` は「記事はまだありません。」を表示する
-- **記事を削除・リネームしたらビルド前に `rm -rf .astro node_modules/.astro` する**。Content Layer のキャッシュ（実体は `node_modules/.astro`）に古いエントリが残り、消したはずの記事をビルドしようとして `LocalImageUsedWrongly` で失敗することがある
+- **記事を削除・リネームしたらビルド前に `rm -rf .astro node_modules/.astro` する**。Content Layer のキャッシュ（実体は `node_modules/.astro`）に消したはずの記事が残り、それをビルドしようとして `LocalImageUsedWrongly` で失敗することがある
 
 ### 記事フィードを変える（外部記事）
 
