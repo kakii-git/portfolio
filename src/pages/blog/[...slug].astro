@@ -10,6 +10,8 @@ import { formatDate, toIsoDate } from "../../lib/date";
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
   // slug は glob ローダーが決める entry.id（拡張子を除いたファイル名の slugify）。
+  // サブディレクトリに置かれた記事は id に "/" を含む（例: "nested/deep-post"）。
+  // [slug] だと "Missing parameter: slug" でビルドが落ちるため rest パラメータにしている。
   return posts.map((post) => ({ params: { slug: post.id }, props: { post } }));
 }
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;

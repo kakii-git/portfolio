@@ -101,6 +101,7 @@ image: ./cover.png        # 任意。サムネイルと OGP 画像を兼ねる
 - **URL は拡張子を除いたファイル名から決まる**。大文字・空白は slugify されて変わってしまうので、**小文字ケバブケース**で命名する（`why-i-picked-astro.md` → `/blog/why-i-picked-astro/`）
 - **frontmatter に `slug` を書かない**。書くと URL がそれで上書きされる
 - **`index.md` は使わない**（`/blog/index/` という紛らわしい URL になる）
+- サブディレクトリに置いてもよい。その場合 URL も入れ子になる（`nested/deep-post.md` → `/blog/nested/deep-post/`）
 - **下書きの仕組みは無い**。`src/content/blog/` 配下の `.md` は、ファイル名に関わらず（`_` 始まりでも）すべて公開される。公開したくないものはこのディレクトリに置かない
 - 画像は `.md` と同じ階層に置けば、frontmatter からも本文の `![](./foo.png)` からも Astro が最適化する
 - コードブロックは Shiki の `github-light` テーマでハイライトされる（`astro.config.mjs`）
