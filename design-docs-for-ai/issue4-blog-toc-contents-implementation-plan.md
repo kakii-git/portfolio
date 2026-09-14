@@ -47,7 +47,7 @@ Issue の「前提」節は実測に基づいており正確だった。加え�
 - **F8**: `vitest.config.*` は存在しない。`npm test` = `vitest run` が `**/*.test.ts` を既定で拾う。テストは `astro:*` 仮想モジュールを import しない限りそのまま動く。`createMarkdownProcessor` は `@astrojs/markdown-remark` の通常の ESM エクスポートなので vitest から直接呼べる（§3.9）
 - **F9**: 既存テスト（`src/lib/mergeArticles.test.ts`）は `describe` / `it` を日本語のケース名で書いている。本 Issue のテストも同じ流儀にする
 - **F10**: README の「記事を書く（自サイト記事）」節（80〜110 行）に、frontmatter 例と「決まりごと」の箇条書きがある。目次マーカーの説明はここに足す（§3.11）
-- **F11**: `src/content/blog/` は空（`.gitkeep` も無い。ディレクトリ自体が git に無い状態。ビルドは `The collection "blog" does not exist or is empty.` の警告付きで成功する）。検証用記事を置いて確認したあとに削除すると元の状態に戻る
+- **F11**: `src/content/blog/` は空（git 管理下の `.gitkeep` だけがある。計画作成時は「`.gitkeep` も無い」と書いていたが、PR レビュー時に誤りと判明し訂正。ビルドは `The collection "blog" does not exist or is empty.` の警告付きで成功する）。検証用記事を置いて確認したあとに削除すると元の状態に戻る
 
 ---
 
