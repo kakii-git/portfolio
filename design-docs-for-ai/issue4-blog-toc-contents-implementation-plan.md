@@ -104,7 +104,11 @@ F1 のとおり、プラグインが throw した `Error` には `@astrojs/markd
 
 エラー文（固定）: `目次マーカー [:contents] は1記事に1つだけ書けます（N箇所あります）`
 
-`npm run build` はこの throw でビルド失敗になる。Cloudflare Pages でも同様（デプロイされない）。§6.5 で実際に確認する。
+**§6.5 で実装後に実測して判明した訂正（Issue 受け入れ条件10の前提が誤り）**: `npm run build` はこの throw で**失敗しない**。Astro 5 の Content Layer の `glob` ローダーは記事ごとのレンダリングを `try/catch` しており（`node_modules/astro/dist/content/loaders/glob.js` 113〜125行）、プラグインが throw すると `logger.error("Error rendering <entry>: <message>")` をコンソールに出すだけで、そのエントリの `rendered` を `undefined` のまま `store` に積んで処理を続行する。`astro build` プロセス自体は正常終了（終了コード0）し、他のページも通常どおり生成される。この挙動を変える設定は `GlobOptions`（`glob.d.ts`）に無く、Astro 側の固定仕様。
+
+**実際に起きること**: 複数マーカーの記事は、エラーメッセージ（`Failed to parse Markdown file "<path>"` 前置つき）が**コンソールにだけ**出て、ページ自体は生成される。その記事の `<div class="prose">` は空になる（frontmatter 由来のタイトル・description・一覧表示は正常）。Cloudflare Pages のビルドログにエラー行は残るが、デプロイは止まらない。**「壊れた記事が静かに公開される」を防ぐ、という受け入れ条件10の本来の意図は、rehype プラグインが throw するだけの設計では達成できない。**
+
+**方針**: 本 Issue のスコープでは、ビルド停止の仕組みを別途作り込まない（rehype プラグイン単体で完結させる設計を維持する）。受け入れ条件10 の検証は「エラーメッセージにファイルパスと1記事1つの文言が出ること」に限定し、「ビルドが落ちる」は満たさないことを明記する（§6.4）。ビルドを実際に止めたい場合は、`src/content/blog/*.md` を事前スキャンする別の検証ステップの追加が必要になるが、それは本計画のスコープ外（§8 に追記）。
 
 ### 3.5 生成する hast の形
 
@@ -473,7 +477,7 @@ diff <(norm $S/plain-off/blog/verify-plain/index.html) <(norm $S/plain-on/blog/v
 | 7 | コードブロック内は置換されない | T11 + 6.2 個数比較 |
 | 8 | 行の一部は文字列のまま残る | T10 + 6.2 個数比較 |
 | 9 | h2 が 0 件ならマーカーごと消える | T13 + 6.5 |
-| 10 | 2 つ以上ならビルドが落ち、ファイルパスが出る | T14 + 6.5 |
+| 10 | 2 つ以上ならビルドが落ち、ファイルパスが出る | T14 + 6.5。**訂正（§3.4）**: ファイルパス付きのエラーメッセージがコンソールに出ることは確認できるが、`npm run build` 自体は失敗しない（Astro 5 の Content Layer の仕様、変更不可）。「ビルドが落ちる」は満たさない |
 | 11 | `<nav class="toc" aria-label="目次">` / `<p class="toc-title">` の構造 | T2 + 6.2 grep |
 | 12 | マーカーなし記事がプラグイン有無で一致 | 6.3 (b) |
 | 13 | ランタイム JS が増えていない | 6.2 `<script>` 数比較 |
@@ -484,7 +488,7 @@ diff <(norm $S/plain-off/blog/verify-plain/index.html) <(norm $S/plain-on/blog/v
 
 | ケース | 方法 | 期待 |
 |---|---|---|
-| 複数マーカー | `verify-toc.md` の末尾に `[:contents]` をもう 1 行足して build | 失敗。ログに `Failed to parse Markdown file "file:///…/verify-toc.md"` と `1記事に1つだけ書けます（2箇所あります）` |
+| 複数マーカー | `verify-toc.md` の末尾に `[:contents]` をもう 1 行足して build | `npm run build` は**成功する（終了コード0）**。コンソールに `[ERROR] [glob-loader] Error rendering verify-toc.md: Failed to parse Markdown file "/…/verify-toc.md":`\n`目次マーカー [:contents] は1記事に1つだけ書けます（2箇所あります）` が出る。生成された `dist/blog/verify-toc/index.html` は `<div class="prose"></div>` が空になり、他のページは影響を受けない（§3.4 の訂正） |
 | h2 なし | `verify-toc.md` の h2 をすべて h3 に変えて build | 成功。ページに `[:contents]` も `class="toc"` も無い（コードブロック内と段落途中の 2 箇所は残る） |
 | プラグイン順序の誤り | `rehypePlugins: [rehypeTocMarker, rehypeHeadingIds]` にして build | 成功するが目次が出ない（T15 と同じ）。**これは「静かに壊れる」ケース**なので、順序を守る理由をコメントに残している（§3.8）。戻す |
 
@@ -501,6 +505,7 @@ diff <(norm $S/plain-off/blog/verify-plain/index.html) <(norm $S/plain-on/blog/v
 | `.prose p` / `.prose ul` の余白が `.toc` 内に当たる | 箱の中が間延びする | §3.6 で `margin: 0` を明示 |
 | 検証用記事の消し忘れ | 意図しない記事が公開される | Phase 3 完了条件と受け入れ条件 15。PR 作成前に `git status` と `ls src/content/blog/` |
 | Content Layer のキャッシュに削除した記事が残る（README 既知） | `LocalImageUsedWrongly` でビルド失敗 | 削除後に `rm -rf .astro node_modules/.astro`（§3.10） |
+| 複数マーカーの記事があっても `npm run build` が成功してしまう（Astro 5 の Content Layer の仕様。§3.4） | 本文が空の記事が気づかれずに公開される | コンソールにエラーが残ることと、レビュー時に `npm run preview` で目視することが最後の砦。恒久対策（事前スキャン等）は §8 でスコープ外にした |
 
 ---
 
@@ -510,6 +515,7 @@ diff <(norm $S/plain-off/blog/verify-plain/index.html) <(norm $S/plain-on/blog/v
 - 目次ラベルの frontmatter 差し替え（Issue「固定」）
 - 現在位置の追従（scrollspy）や折りたたみ。クライアント JS を増やすので方針に反する
 - `[:contents]` 以外の記法（`[[toc]]` 等）の受け付け
+- 複数マーカーの記事で `npm run build` 自体を失敗させるための、Content Collections 外の事前検証ステップ（§3.4）。Astro 5 の Content Layer は記事ごとのレンダリングエラーを内部で吸収し、`astro build` を正常終了させる仕様であることが実装時に判明した。本 Issue では rehype プラグイン単体で完結させる設計を維持し、この恒久対策は別 Issue とする
 - 目次マーカーが段落の一部にあるときの警告ログ（Issue「警告も出さない」）
 - `src/lib/writing.ts` 等、本 Issue と無関係なファイルの変更
 
@@ -550,3 +556,11 @@ Issue #4 の初稿にあった「未確定・要レビュー事項」6 件を、
 - F1: プラグインが throw すると `@astrojs/markdown-remark` がファイルパスを前置する。Issue の「実装時の確認事項」はこれで解消
 - F3: `@types/hast` が推移的依存。Issue の 3 パッケージに加えて devDependencies に追加する（§3.7）
 - F5: `rehypeHeadingIds` が内部でユーザープラグインの後に登録されているコード上の根拠
+
+### 実装時の逸脱（2026-09-14）
+
+- **ブランチ運用**: §0/§4 Phase 0 は「計画書を `plan/issue-4-blog-toc-contents` で `main` にマージしてから `feat/issue-4-blog-toc` を切る」としていたが、実装は `plan/issue-4-blog-toc-contents`（PR #5）のブランチ上でそのまま行った。`feat/issue-4-blog-toc` は作成していない。理由: ユーザーの明示的な指示。§9 の「実装の PR」は PR #5 への追加コミットに読み替える
+- **T6/T7/T8 の期待 id 実測**: `npx tsx` が使えなかったため、計画の `.mts` ではなく素の `.mjs` をプロジェクトルートに一時配置して `node` で直接実行した（スクラッチ領域からは `@astrojs/markdown-remark` の解決に失敗したため）。実測値は計画の見込みと完全に一致（`fetch-の罠` / `はじめに` / `はじめに-1`）。使い捨てスクリプトは commit していない
+- **§6.3(a) の正規化パターンの誤り**: 計画の `norm()` は CSS ファイル名を `index\.[hash]\.css` と想定していたが、実際のビルド出力は `_slug_.[hash].css`（ブログ記事ページの entry chunk 名に由来）。正規化パターンをファイル名非依存の形（`_astro/[名前].[hash].css`）に直して diff を取り直し、CSSハッシュ以外の差分が無いことを確認した
+- **受け入れ条件10・§3.4・§6.5 の前提の誤り（重要）**: 「複数マーカーで `npm run build` が失敗する」という前提は誤りだった。Astro 5 の Content Layer `glob` ローダー（`node_modules/astro/dist/content/loaders/glob.js` 113〜125行）は記事ごとのレンダリング時の例外を内部で `try/catch` し、`logger.error()` でコンソールに出すだけで `store` への登録・ビルド続行を許す。`GlobOptions`（`glob.d.ts`）にこの挙動を変える設定は無い。実測では `npm run build` は終了コード0で成功し、該当記事の `<div class="prose">` だけが空になる。ユーザーに実装時点で報告し、「文書のみ修正」の方針で合意を得た。恒久対策（ビルドを実際に失敗させる事前検証ステップの追加）は本 Issue のスコープ外とし、§7・§8 に記録した
+- 上記以外は計画どおりに実装できた（依存追加、プラグイン実装、テスト16ケース、配線、CSS、検証用記事）
