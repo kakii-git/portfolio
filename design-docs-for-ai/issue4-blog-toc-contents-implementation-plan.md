@@ -265,7 +265,10 @@ Issue の決定「マーカーなし＝回帰用、マーカーあり＝機能�
 |---|---|---|
 | 1 | `src/lib/rehype-toc.test.ts` | **先に書く**（RED）。§6.1 の全ケース。`rehype-toc.ts` が無いので import で落ちる |
 | 2 | `src/lib/rehype-toc.ts` | §3.1〜3.5 の実装（GREEN） |
-| 3 | 同上 | リファクタ。関数は `isMarker` / `collectHeadings` / `findMarkers` / `buildToc` / `rehypeTocMarker` に分け、各 20 行以内 |
+| 3 | 同上 | リファクタ。関数は `isMarker` / `collectHeadings` / `findMarkers` / `buildToc` / `rehypeTocMarker` に分け、各 20 行以内（目安。下記） |
+
+- 手順 1 の前に、T6 / T7 / T8 の期待 id を §6.1 末尾の手順で実測しておく（テストに固定値として書くため）
+- 「各 20 行以内」はこの計画での**目安**で、上限はグローバルルールの「関数は 50 行未満」のまま。20 行にした理由は、5 つの関数が §3.1〜3.5 の関心事（マーカー判定 / 見出し収集 / マーカー探索 / 目次構築 / 結合）に 1 対 1 で対応しており、1 関数がその関心事だけを扱っていれば 20 行に収まる見込みだから。超えるなら関心事が混ざっていないかを疑う、という使い方をする。20 行を超えても分割が不自然なら 50 行未満で通す
 
 **完了条件**: `npm test` が通る。`npm run check` が通る（`*.test.ts` も型検査対象、F8）。
 
@@ -388,6 +391,20 @@ export const rehypeTocMarker: RehypePlugin = () => (tree) => {
 | T16 | 引用の中のマーカーも置換する | `> [:contents]` と h2 | `<blockquote><nav class="toc">…` |
 
 T6 / T7 / T8 の期待 id は、テスト作成時に `rehypeHeadingIds` 単体の出力から取って固定する（実装が id を「生成」しないことの担保。自前生成していたら Astro の版が上がったときにずれてテストが落ちる、という方向に働く）。
+
+**期待 id の確定手順（Phase 1 の手順 1 より前、RED の時点で行う）**: `rehypeHeadingIds` は Phase 0 で入る `@astrojs/markdown-remark` に含まれるので、`rehype-toc.ts` が無くても動かせる。次の使い捨てスクリプトをスクラッチ領域に置いて実行し、出力の `<h2 id="...">` から id を読み取ってテストの固定値にする。スクリプトは commit しない。
+
+```ts
+// scratch/heading-ids.mts（使い捨て。npx tsx で実行）
+import { createMarkdownProcessor, rehypeHeadingIds } from "@astrojs/markdown-remark";
+const p = await createMarkdownProcessor({ rehypePlugins: [rehypeHeadingIds] });
+for (const md of ["## `fetch` の**罠**", "## はじめに", "## はじめに\n\n## はじめに"]) {
+  console.log((await p.render(md)).code);
+}
+```
+
+- 計画作成時点の見込みは T6 = `fetch-の罠`、T7 = `はじめに`、T8 = `はじめに` と `はじめに-1` だが、**見込みではなく実測値を書く**。実測が見込みと違った場合は §6.1 の表の期待も実測に合わせて直す
+- 実測値をテストに書いた後は、この手順を再実行する必要はない。Astro の版を上げて T6〜T8 が落ちたら、それは「id の規則が変わった」合図なので、そのときに同じ手順で取り直す
 
 カバレッジ: `rehype-toc.ts` は分岐が少ないので上記で 100% を目標にする。
 
