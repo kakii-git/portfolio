@@ -3,6 +3,8 @@ import { defineConfig } from "astro/config";
 import sitemap from "@astrojs/sitemap";
 import icon from "astro-icon";
 import fs from "node:fs";
+import { rehypeHeadingIds } from "@astrojs/markdown-remark";
+import { rehypeTocMarker } from "./src/lib/rehype-toc.ts";
 
 // 本番ドメイン。canonical / OGP / sitemap / robots はすべてここから導出される。
 const SITE = "https://kakii.dev";
@@ -47,6 +49,10 @@ export default defineConfig({
   // なので追加依存は要らない。色は <pre> にインラインで出るため CSS では触らない。
   markdown: {
     shikiConfig: { theme: "github-light" },
+    // rehypeHeadingIds は Astro が内部で常に実行するが、その順番はユーザー指定の
+    // rehypePlugins より後。自作プラグインから見出しの id を参照するために先に並べる。
+    // 二重に実行されても、Astro 側は id 付きの見出しをスキップするので重複しない。
+    rehypePlugins: [rehypeHeadingIds, rehypeTocMarker],
   },
   image: {
     // ローカル画像の最適化（sharp）。リモート画像は使わない。

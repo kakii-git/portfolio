@@ -36,6 +36,7 @@ src/
     blog.ts            外部記事と自サイト記事を1本のリストに統合
     mergeArticles.ts   日付降順マージ（純粋関数・単体テストあり）
     date.ts            日付整形（UTC基準・単体テストあり）
+    rehype-toc.ts      [:contents] を h2 の目次に置き換える rehype プラグイン（単体テストあり）
   layouts/Base.astro <head>・メタ・背景・軽量スクリプト
   components/*.astro  各セクション
   pages/
@@ -93,11 +94,14 @@ image: ./cover.png        # 任意。サムネイルと OGP 画像を兼ねる
 
 本文。見出しは `##` と `###` まで（`#` は記事タイトル用）。
 
+[:contents]
+
 ![図](./cover.png)
 ```
 
 決まりごと:
 
+- **`[:contents]` と1行書くと、その位置に h2 の目次が入る**。1記事に1つまで（2つ以上あるとコンソールにエラーが出るが、ビルド自体は失敗しない。該当記事の本文だけが空になるので、複数書いていないか目視で確認する）。h2 が無い記事では何も出ない
 - **URL は拡張子を除いたファイル名から決まる**。大文字・空白は slugify されて変わってしまうので、**小文字ケバブケース**で命名する（`why-i-picked-astro.md` → `/blog/why-i-picked-astro/`）
 - **frontmatter に `slug` を書かない**。書くと URL がそれで上書きされる
 - **`index.md` は使わない**（`/blog/index/` という紛らわしい URL になる）

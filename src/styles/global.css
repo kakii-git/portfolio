@@ -913,6 +913,36 @@ a { color: inherit; text-decoration: none; }
 .prose th { font-weight: 600; }
 .prose td { color: var(--ink-2); }
 
+/* ── 目次（[:contents] から src/lib/rehype-toc.ts が生成する <nav class="toc">） ──
+   箱は hairline、ラベルの上に cap-rule と同じ 22px の青い短罫を置く（Blue is rationed）。
+   .prose a の下線は縦に並ぶと罫線が二重に見えるので目次内では消し、hover の青だけ残す。 */
+.prose .toc {
+  margin: 32px 0;
+  padding: 18px 22px 16px;
+  border: 1px solid var(--hairline);
+}
+
+.prose .toc-title {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}
+
+.prose .toc-title::before {
+  content: "";
+  display: block;
+  width: 22px;
+  height: 1px;
+  background: var(--blue);
+  margin-bottom: 12px;
+}
+
+.prose .toc ul { margin: 0; padding-left: 1.2em; font-size: 14px; }
+.prose .toc li { margin: 4px 0; }
+.prose .toc a { border-bottom: none; }
+
 /* ───────────────────────── Footer ───────────────────────── */
 
 .site-footer {
