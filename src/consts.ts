@@ -21,11 +21,22 @@ export const SITE = {
   author: "ka.kii",
   lang: "ja",
   ogImage: "/og-image.png", // 静的1枚。自動生成は将来課題（README参照）。
+  // og:site_name。Slack のリンクカード上部に出るサイト名。
+  siteName: "kakii.dev",
+  // twitter:site / twitter:creator。X のカードに紐づくアカウント。
+  xHandle: "@kakii_vol",
 } as const;
 
 // ── 自サイト記事の出典ラベル ──
 // /blog/ の一覧で外部記事の badge（Qiita 等）と並べて表示する。
 export const POST_SOURCE = "kakii.dev";
+
+// ── 自サイト記事の末尾に出す著者紹介 ──
+// 名前とアイコンは PROFILE / src/assets/icon.jpg と共通。肩書きと一言だけここで持つ。
+export const POST_AUTHOR = {
+  role: "電気通信大学MMA 2025年度部長",
+  bio: "最近はローレイヤのセキュリティに興味があります。",
+} as const;
 
 // ── 外部記事のフィード（/blog/ の一覧に統合される） ──
 // ユーザー名の変更はここだけ。Zenn はアカウント作成後に1行足せば統合される。

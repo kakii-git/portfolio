@@ -1,0 +1,15 @@
+---
+import { Image } from "astro:assets";
+import icon from "../assets/icon.jpg";
+import { PROFILE, POST_AUTHOR } from "../consts";
+---
+
+{/* 自サイト記事の末尾に置く著者紹介。外部記事は本文を持たないので出番がない */}
+<aside class="author-card" aria-label="この記事を書いた人">
+  <Image class="author-icon" src={icon} alt="" width={64} height={64} densities={[1, 2]} />
+  <div>
+    <p class="author-name">{PROFILE.name}</p>
+    <p class="author-role">{POST_AUTHOR.role}</p>
+    <p class="author-bio">{POST_AUTHOR.bio}</p>
+  </div>
+</aside>

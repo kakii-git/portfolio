@@ -5,6 +5,7 @@ import type { InferGetStaticPropsType } from "astro";
 import Base from "../../layouts/Base.astro";
 import Header from "../../components/Header.astro";
 import Footer from "../../components/Footer.astro";
+import AuthorCard from "../../components/AuthorCard.astro";
 import { formatDate, toIsoDate } from "../../lib/date";
 
 export async function getStaticPaths() {
@@ -19,10 +20,21 @@ type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 const { post } = Astro.props;
 const { Content } = await render(post);
 
-// OGP は format: "png" を明示する。既定の WebP は X のカードで表示されない環境がある。
+// OGP は format を明示する。既定の WebP は X のカードで表示されない環境がある。
+// 写真を PNG にすると数MBになりカード画像が落ちることがあるため JPEG にし、
+// カードの推奨比率 1200x630 に切り抜く。
 // 画像が無い記事は undefined を渡し、Base 側の既定値（SITE.ogImage）に落とす。
 const ogImage = post.data.image
-  ? (await getImage({ src: post.data.image, width: 1200, format: "png" })).src
+  ? (
+      await getImage({
+        src: post.data.image,
+        width: 1200,
+        height: 630,
+        fit: "cover",
+        format: "jpg",
+        quality: 80,
+      })
+    ).src
   : undefined;
 ---
 
@@ -42,6 +54,7 @@ const ogImage = post.data.image
         <h1 class="post-title">{post.data.title}</h1>
       </header>
       <div class="prose"><Content /></div>
+      <AuthorCard />
       <a class="post-back" href="/blog/">← ブログ一覧へ</a>
     </article>
   </main>
