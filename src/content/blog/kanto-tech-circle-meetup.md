@@ -5,6 +5,8 @@ description: 2026年7月11日、六本木のDMM.com様オフィスで関東の�
 image: ./kanto-tech-circle-meetup/03_opening_crowd.jpg
 ---
 
+こんにちは。電気通信大学の技術系サークル MMA で、昨年度まで部長をしていた ka.kii です。
+
 [:contents]
 
 ## はじめに
