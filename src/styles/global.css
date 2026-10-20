@@ -830,6 +830,13 @@ a { color: inherit; text-decoration: none; }
   object-fit: cover;
 }
 
+/* 肩書きはスペース、一言は <wbr> を置いた文節の切れ目でだけ折る。収まらない極端な幅では保険として任意位置で折る */
+.author-role,
+.author-bio {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
 .author-name {
   font-size: 15px;
   font-weight: 600;

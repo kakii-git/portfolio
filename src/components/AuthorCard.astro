@@ -10,6 +10,6 @@ import { PROFILE, POST_AUTHOR } from "../consts";
   <div>
     <p class="author-name">{PROFILE.name}</p>
     <p class="author-role">{POST_AUTHOR.role}</p>
-    <p class="author-bio">{POST_AUTHOR.bio}</p>
+    <p class="author-bio">{POST_AUTHOR.bio.map((w, i) => <>{i > 0 && <wbr />}{w}</>)}</p>
   </div>
 </aside>
