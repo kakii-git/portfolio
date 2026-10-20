@@ -771,7 +771,8 @@ a { color: inherit; text-decoration: none; }
   transition: color 0.2s ease;
 }
 
-.writing-title:hover { color: var(--blue); }
+.writing-card:hover .writing-title,
+.writing-card:focus-visible .writing-title { color: var(--blue); }
 
 .writing-title .arrow {
   color: var(--ink-3);
@@ -811,9 +812,45 @@ a { color: inherit; text-decoration: none; }
   line-height: 1.4;
 }
 
+/* 記事末尾の著者紹介。本文との区切りは post-head と同じ hairline で揃える */
+.author-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 64px;
+  padding: 24px;
+  border: 1px solid var(--hairline);
+}
+
+.author-icon {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.author-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.author-role {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+}
+
+.author-bio {
+  margin-top: 8px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+}
+
 .post-back {
   display: inline-block;
-  margin-top: 64px;
+  margin-top: 40px;
   font-size: 13px;
   color: var(--ink-2);
   border-bottom: 1px solid var(--hairline);
